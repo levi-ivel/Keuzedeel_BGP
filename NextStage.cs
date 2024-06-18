@@ -10,7 +10,7 @@ private void OnTriggerEnter2D(Collider2D other)
 int currentIndex = SceneManager.GetActiveScene().buildIndex;
 int nextSceneIndex = currentIndex + 1;
 
-if (other.tag == "Player")
+    if (other.tag == "Player")
     {
         if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
         {
