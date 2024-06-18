@@ -1,0 +1,13 @@
+.vscode/
+Library/
+Logs/
+Packages/
+ProjectSettings/
+Temp/
+UserSettings/
+*.meta
+*.terrain
+*.asset
+Scenes/
+Sprites/
+Textures/
