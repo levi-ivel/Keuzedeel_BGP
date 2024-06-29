@@ -5,10 +5,11 @@ using UnityEngine.SceneManagement;
 
 public class NextStage : MonoBehaviour
 {
+
 private void OnTriggerEnter2D(Collider2D other)
 {
-int currentIndex = SceneManager.GetActiveScene().buildIndex;
-int nextSceneIndex = currentIndex + 1;
+    int currentIndex = SceneManager.GetActiveScene().buildIndex;
+    int nextSceneIndex = currentIndex + 1;
 
     if (other.tag == "Player")
     {
