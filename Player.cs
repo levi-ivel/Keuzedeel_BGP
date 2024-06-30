@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System;
+using System.Data.Common;
 
 public class Movement : MonoBehaviour
 {
@@ -46,6 +47,14 @@ public Text livesText;
 private bool lifeLost = false;
 //END --Variables Lives--
 
+//START --Variables Power-up--
+public GameObject Spear;
+private bool hasSpear = false;
+private float spearTimer = 0f;
+private float spearDuration = 10f; 
+
+//END --Variables Power-up--
+
 private void Start()
     {
         rigidbody = GetComponent<Rigidbody2D>();
@@ -74,6 +83,16 @@ private void Update()
     {
         LoseLife();
     }
+    
+    if (hasSpear)
+    {
+        spearTimer -= Time.deltaTime;
+        if (spearTimer <= 0)
+        {
+            hasSpear = false;
+            Spear.SetActive(false);
+        }
+    }
     }
 
 //START --Movement--
@@ -98,6 +117,15 @@ private void Moving()
             rigidbody.velocity = new Vector2(Mathf.MoveTowards(rigidbody.velocity.x, 0, Deceleration * Time.deltaTime), rigidbody.velocity.y);
         }
 
+        if (movementInput > 0)
+        {
+            transform.localScale = new Vector3(1f, 1f, 1f); 
+        }
+        else if (movementInput < 0)
+        {
+            transform.localScale = new Vector3(-1f, 1f, 1f); 
+        }
+
         if (Input.GetKey(KeyCode.LeftShift))
         {
             MovementSpeed = 10;
@@ -117,6 +145,7 @@ private void Moving()
         }
     }
 
+
 private void CheckGrounded()
     {
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1.1f, LayerMask.GetMask("Ground"));
@@ -134,6 +163,7 @@ private void OnTriggerEnter2D(Collider2D other)
         {
             LoseLife();
         }
+//END --Death--
 
 //START --Next Level--
         if (other.tag == "Next")
@@ -161,8 +191,30 @@ private void OnTriggerEnter2D(Collider2D other)
             IncreaseDrinkLevel();
             Destroy(other.gameObject);
         }
+    
+        if (other.tag == "Power")
+        {
+            Spear.SetActive(true);
+            hasSpear = true;
+            spearTimer = spearDuration;
+            Destroy(other.gameObject);
+        }
 //END --Consumables--
-    }
+
+//START --Enemy--
+        if (other.tag == "Enemy")
+        {
+            if (hasSpear)
+            {
+                Destroy(other.gameObject); 
+            }
+            else
+            {
+                LoseLife(); 
+            }
+        }
+//END --Enemy--
+}
 
 //START --Game Over UI--
 private void FreezeGame()
@@ -237,7 +289,7 @@ void UpdateTimerText()
     }
 //END --Timer--
 
-//START --Lives System--
+//START --Lives--
 private void LoseLife()
     {
         if (!lifeLost)
@@ -269,5 +321,5 @@ private void GoToGameOver()
         PlayerPrefs.SetInt("Lives", maxLives);
         SceneManager.LoadScene(0);
     }
-//END --Lives System--
+//END --Lives--
 }
