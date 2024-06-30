@@ -39,12 +39,12 @@ private float drinkLevel = 100f;
 public float gameDuration = 300f; 
 public Text timerText;
 private float timer;
-//END --Variable Timer--
+//END --Variables Timer--
 
-//START --Variable Lives--
+//START --Variables Lives--
 public Text livesText;
 private bool lifeLost = false;
-//END --Variable Lives--
+//END --Variables Lives--
 
 private void Start()
     {
