@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class Movement : MonoBehaviour
 {
+//START --Variables Movement--
 public float MovementSpeed = 8f;
 public float MaxSpeed = 8f;
 public float JumpForce = 10f;
@@ -14,16 +15,40 @@ public float Deceleration = 10f;
 public float AirControl = 0.5f;
 private new Rigidbody2D rigidbody;
 private bool isGrounded = false;
+//END --Variables Movement--
+//START --Variables Death--
 public GameObject gameOverUI;
 private bool isGameFrozen = false;
+//END --Variables Death--
+//START --Variables Consumables--
+public Slider foodSlider;
+public Slider drinkSlider;
+public float decreaseRate = 1f; 
+public float increaseAmount = 10f;
+private float foodLevel = 100f;
+private float drinkLevel = 100f;
+//END --Variables Consumables--
 
 private void Start()
     {
         rigidbody = GetComponent<Rigidbody2D>();
+        foodSlider.maxValue = 100f;
+        foodSlider.value = foodLevel;
+        drinkSlider.maxValue = 100f;
+        drinkSlider.value = drinkLevel;
     }
 
 private void Update()
     {
+        Moving();
+        CheckGrounded();
+        DecreaseSliders();
+    }
+
+//START --Movement--
+private void Moving()
+    {
+
         var movementInput = Input.GetAxis("Horizontal");
         var currentSpeed = rigidbody.velocity.x;
 
@@ -60,8 +85,6 @@ private void Update()
         {
             rigidbody.AddForce(new Vector2(0, JumpForce), ForceMode2D.Impulse);
         }
-
-        CheckGrounded();
     }
 
 private void CheckGrounded()
@@ -69,16 +92,48 @@ private void CheckGrounded()
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1.1f, LayerMask.GetMask("Ground"));
         isGrounded = hit.collider != null;
     }
-
-private void OnTriggerEnter2D(Collider2D collision)
+//END --Movement--
+//START --Death--
+private void OnTriggerEnter2D(Collider2D other)
 {
-    if (collision.CompareTag("Death") && !isGameFrozen)
+    int currentIndex = SceneManager.GetActiveScene().buildIndex;
+    int nextSceneIndex = currentIndex + 1;
+
+    if (other.CompareTag("Death") && !isGameFrozen)
     {
         FreezeGame();
         ActivateGameOverUI();
     }
+//END --Death--
+//START --Next Level--
+    if (other.tag == "Next")
+    {
+        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+        {
+            SceneManager.LoadScene(nextSceneIndex);
+        }
+        else
+        {
+            Debug.Log("No more scenes available.");
+        }
+    }
+//END --Next Level--
+//START --Consumables--
+    if (other.tag == "Food")
+    {
+        IncreaseFoodLevel();
+        Destroy(other.gameObject); 
+    }
+
+    if (other.tag == "Drink")
+    {
+        IncreaseDrinkLevel();
+        Destroy(other.gameObject);
+    }
+//END --Consumables--
 }
 
+//START --Game Over UI--
 private void FreezeGame()
     {
         isGameFrozen = true;
@@ -105,4 +160,32 @@ public void QuitGame()
         isGameFrozen = false;
         gameOverUI.SetActive(false);
     }
+//END --Game Over UI--
+//START --Consumable Sliders--
+void DecreaseSliders()
+{
+    foodLevel -= decreaseRate * Time.deltaTime;
+    drinkLevel -= decreaseRate * Time.deltaTime;
+
+    foodLevel = Mathf.Clamp(foodLevel, 0f, 100f);
+    drinkLevel = Mathf.Clamp(drinkLevel, 0f, 100f);
+
+    foodSlider.value = foodLevel;
+    drinkSlider.value = drinkLevel;
+}
+
+void IncreaseFoodLevel()
+    {
+        foodLevel += increaseAmount;
+        foodLevel = Mathf.Clamp(foodLevel, 0f, 100f); 
+        foodSlider.value = foodLevel;
+    }
+
+void IncreaseDrinkLevel()
+    {
+        drinkLevel += increaseAmount;
+        drinkLevel = Mathf.Clamp(drinkLevel, 0f, 100f); 
+        drinkSlider.value = drinkLevel;
+    }
+//END --Consumable Sliders--
 }
