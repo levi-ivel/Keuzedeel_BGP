@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System;
 
 public class Movement : MonoBehaviour
 {
@@ -16,10 +17,15 @@ public float AirControl = 0.5f;
 private new Rigidbody2D rigidbody;
 private bool isGrounded = false;
 //END --Variables Movement--
+
 //START --Variables Death--
 public GameObject gameOverUI;
+public GameObject MainUI;
 private bool isGameFrozen = false;
+public int maxLives = 3;
+private int lives;
 //END --Variables Death--
+
 //START --Variables Consumables--
 public Slider foodSlider;
 public Slider drinkSlider;
@@ -29,13 +35,32 @@ private float foodLevel = 100f;
 private float drinkLevel = 100f;
 //END --Variables Consumables--
 
+//START --Variables Timer--
+public float gameDuration = 300f; 
+public Text timerText;
+private float timer;
+//END --Variable Timer--
+
+//START --Variable Lives--
+public Text livesText;
+private bool lifeLost = false;
+//END --Variable Lives--
+
 private void Start()
     {
         rigidbody = GetComponent<Rigidbody2D>();
+
         foodSlider.maxValue = 100f;
         foodSlider.value = foodLevel;
         drinkSlider.maxValue = 100f;
         drinkSlider.value = drinkLevel;
+
+        timer = gameDuration;
+        UpdateTimerText();
+
+        lives = PlayerPrefs.GetInt("Lives", maxLives);
+        lives = PlayerPrefs.GetInt("Lives", maxLives);
+        UpdateLivesText();
     }
 
 private void Update()
@@ -43,12 +68,17 @@ private void Update()
         Moving();
         CheckGrounded();
         DecreaseSliders();
+        UpdateTimerText();
+
+    if (!lifeLost && (timer <= 0 || foodLevel <= 0 || drinkLevel <= 0))
+    {
+        LoseLife();
+    }
     }
 
 //START --Movement--
 private void Moving()
     {
-
         var movementInput = Input.GetAxis("Horizontal");
         var currentSpeed = rigidbody.velocity.x;
 
@@ -93,45 +123,46 @@ private void CheckGrounded()
         isGrounded = hit.collider != null;
     }
 //END --Movement--
+
 //START --Death--
 private void OnTriggerEnter2D(Collider2D other)
-{
-    int currentIndex = SceneManager.GetActiveScene().buildIndex;
-    int nextSceneIndex = currentIndex + 1;
-
-    if (other.CompareTag("Death") && !isGameFrozen)
     {
-        FreezeGame();
-        ActivateGameOverUI();
-    }
-//END --Death--
+        int currentIndex = SceneManager.GetActiveScene().buildIndex;
+        int nextSceneIndex = currentIndex + 1;
+
+        if (other.CompareTag("Death") && !isGameFrozen)
+        {
+            LoseLife();
+        }
+
 //START --Next Level--
-    if (other.tag == "Next")
-    {
-        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+        if (other.tag == "Next")
         {
-            SceneManager.LoadScene(nextSceneIndex);
+            if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+            {
+                SceneManager.LoadScene(nextSceneIndex);
+            }
+            else
+            {
+                Debug.Log("No more scenes available.");
+            }
         }
-        else
-        {
-            Debug.Log("No more scenes available.");
-        }
-    }
 //END --Next Level--
-//START --Consumables--
-    if (other.tag == "Food")
-    {
-        IncreaseFoodLevel();
-        Destroy(other.gameObject); 
-    }
 
-    if (other.tag == "Drink")
-    {
-        IncreaseDrinkLevel();
-        Destroy(other.gameObject);
-    }
+//START --Consumables--
+        if (other.tag == "Food")
+        {
+            IncreaseFoodLevel();
+            Destroy(other.gameObject); 
+        }
+
+        if (other.tag == "Drink")
+        {
+            IncreaseDrinkLevel();
+            Destroy(other.gameObject);
+        }
 //END --Consumables--
-}
+    }
 
 //START --Game Over UI--
 private void FreezeGame()
@@ -145,12 +176,18 @@ private void ActivateGameOverUI()
         gameOverUI.SetActive(true);
     }
 
+private void DeactivateMainUI()
+    {
+        MainUI.SetActive(false);
+    }
+
 public void ResetGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         Time.timeScale = 1f;
         isGameFrozen = false;
         gameOverUI.SetActive(false);
+        lifeLost = false;
     }
 
 public void QuitGame()
@@ -161,18 +198,19 @@ public void QuitGame()
         gameOverUI.SetActive(false);
     }
 //END --Game Over UI--
+
 //START --Consumable Sliders--
 void DecreaseSliders()
-{
-    foodLevel -= decreaseRate * Time.deltaTime;
-    drinkLevel -= decreaseRate * Time.deltaTime;
+    {
+        foodLevel -= decreaseRate * Time.deltaTime;
+        drinkLevel -= decreaseRate * Time.deltaTime;
 
-    foodLevel = Mathf.Clamp(foodLevel, 0f, 100f);
-    drinkLevel = Mathf.Clamp(drinkLevel, 0f, 100f);
+        foodLevel = Mathf.Clamp(foodLevel, 0f, 100f);
+        drinkLevel = Mathf.Clamp(drinkLevel, 0f, 100f);
 
-    foodSlider.value = foodLevel;
-    drinkSlider.value = drinkLevel;
-}
+        foodSlider.value = foodLevel;
+        drinkSlider.value = drinkLevel;
+    }
 
 void IncreaseFoodLevel()
     {
@@ -188,4 +226,48 @@ void IncreaseDrinkLevel()
         drinkSlider.value = drinkLevel;
     }
 //END --Consumable Sliders--
+
+//START --Timer--
+void UpdateTimerText()
+    {
+        timer -= Time.deltaTime;
+        int minutes = Mathf.FloorToInt(timer / 60);
+        int seconds = Mathf.FloorToInt(timer % 60);
+        timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+    }
+//END --Timer--
+
+//START --Lives System--
+private void LoseLife()
+    {
+        if (!lifeLost)
+        {
+            lives--;
+            PlayerPrefs.SetInt("Lives", lives);
+            UpdateLivesText();
+            lifeLost = true;
+
+            if (lives <= 0)
+            {
+                GoToGameOver();
+            }
+            else
+            {
+                FreezeGame();
+                DeactivateMainUI();
+                ActivateGameOverUI();
+            }
+        }
+    }
+private void UpdateLivesText()
+    {
+        livesText.text = "Lives: " + lives;
+    }
+
+private void GoToGameOver()
+    {
+        PlayerPrefs.SetInt("Lives", maxLives);
+        SceneManager.LoadScene(0);
+    }
+//END --Lives System--
 }
