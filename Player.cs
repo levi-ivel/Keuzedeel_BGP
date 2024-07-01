@@ -119,11 +119,11 @@ private void Moving()
 
         if (movementInput > 0)
         {
-            transform.localScale = new Vector3(1f, 1f, 1f); 
+            transform.localScale = new Vector3(4f, 4f, 4f); 
         }
         else if (movementInput < 0)
         {
-            transform.localScale = new Vector3(-1f, 1f, 1f); 
+            transform.localScale = new Vector3(-4f, 4f, 4f); 
         }
 
         if (Input.GetKey(KeyCode.LeftShift))
