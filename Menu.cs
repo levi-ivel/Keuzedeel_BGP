@@ -8,7 +8,7 @@ public class mainmenu : MonoBehaviour
 public GameObject SelectUI;
 public GameObject MainMenu;
 
-
+//START --Main Menu--
 public void StartGame()
     {
         SceneManager.LoadScene(1);
@@ -26,12 +26,9 @@ public void Selectgame()
         MainMenu.SetActive(true);
     }
 
-public void BackMenu()
-    {
-        SelectUI.SetActive(true);
-        MainMenu.SetActive(false);
-    }
+//END --Main Menu--
 
+//START --Select Menu--
 public void SelectTut()
     {
         SceneManager.LoadScene(1);
@@ -52,5 +49,11 @@ public void Select3()
         SceneManager.LoadScene(4);
     }
 
+public void BackMenu()
+    {
+        SelectUI.SetActive(true);
+        MainMenu.SetActive(false);
+    }
+//END --Select Menu--
 
 }

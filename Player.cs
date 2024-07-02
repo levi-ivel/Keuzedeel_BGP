@@ -62,6 +62,7 @@ private void Start()
     {
         Application.targetFrameRate = 60;
         QualitySettings.vSyncCount = 1;
+
         rigidbody = GetComponent<Rigidbody2D>();
 
         foodSlider.maxValue = 100f;
@@ -81,6 +82,7 @@ private void Update()
     {
         Moving();
         CheckGrounded();
+    
         DecreaseSliders();
         UpdateTimerText();
 
