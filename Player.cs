@@ -51,12 +51,17 @@ private bool lifeLost = false;
 public GameObject Spear;
 private bool hasSpear = false;
 private float spearTimer = 0f;
-private float spearDuration = 10f; 
-
+private float spearDuration = 5f; 
 //END --Variables Power-up--
+
+//START --Variables NextStage--
+public GameObject ClearUI;
+//END --Variables NextStage--
 
 private void Start()
     {
+        Application.targetFrameRate = 60;
+        QualitySettings.vSyncCount = 1;
         rigidbody = GetComponent<Rigidbody2D>();
 
         foodSlider.maxValue = 100f;
@@ -156,9 +161,6 @@ private void CheckGrounded()
 //START --Death--
 private void OnTriggerEnter2D(Collider2D other)
     {
-        int currentIndex = SceneManager.GetActiveScene().buildIndex;
-        int nextSceneIndex = currentIndex + 1;
-
         if (other.CompareTag("Death") && !isGameFrozen)
         {
             LoseLife();
@@ -168,15 +170,11 @@ private void OnTriggerEnter2D(Collider2D other)
 //START --Next Level--
         if (other.tag == "Next")
         {
-            if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
-            {
-                SceneManager.LoadScene(nextSceneIndex);
-            }
-            else
-            {
-                Debug.Log("No more scenes available.");
-            }
+            FreezeGame();
+            MainUI.SetActive(false);
+            ClearUI.SetActive(true);
         }
+
 //END --Next Level--
 
 //START --Consumables--
@@ -250,6 +248,37 @@ public void QuitGame()
         gameOverUI.SetActive(false);
     }
 //END --Game Over UI--
+
+//START --Level Clear UI--
+public void BackLevelClear()
+    {
+        Time.timeScale = 1f;
+        isGameFrozen = false;
+        SceneManager.LoadScene(0);
+        
+    }
+
+public void Continue()
+    {
+        int currentIndex = SceneManager.GetActiveScene().buildIndex;
+        int nextSceneIndex = currentIndex + 1;
+
+        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+        {
+            Time.timeScale = 1f;
+            isGameFrozen = false;
+            SceneManager.LoadScene(nextSceneIndex);
+        }
+
+        else
+        {
+            Time.timeScale = 1f;
+            isGameFrozen = false;
+            SceneManager.LoadScene(0);
+        }
+    }
+
+//END --Level Clear UI--
 
 //START --Consumable Sliders--
 void DecreaseSliders()
